@@ -1,6 +1,10 @@
 # Local tool config
 .claude/
 
+# Secrets / local env (e.g. the API signup code)
+.env
+*.env
+
 # OS / editor
 .DS_Store
 Thumbs.db
