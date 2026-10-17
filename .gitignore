@@ -1,0 +1,8 @@
+# Local tool config
+.claude/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+node_modules/

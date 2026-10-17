@@ -1,0 +1,23 @@
+{
+  "id": "./",
+  "name": "Tiny Wins: Lazy-Proof Weight Loss",
+  "short_name": "Tiny Wins",
+  "description": "Lose weight with tiny habits, one small stage at a time. Craving SOS, streaks that forgive, and smart reminders.",
+  "start_url": "./#/today",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6fb",
+  "theme_color": "#0fae8a",
+  "categories": ["health", "fitness", "lifestyle"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Craving SOS", "short_name": "SOS", "url": "./#/sos", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Log weight", "short_name": "Weigh-in", "url": "./#/progress", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
