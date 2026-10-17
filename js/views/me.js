@@ -144,8 +144,8 @@ export function openAuthSheet(mode = 'login') {
   });
   body.addEventListener('submit', e => e.preventDefault());
   body.addEventListener('click', e => {
-    const to = e.target.closest('[data-mode]')?.dataset.mode;
-    if (to) { body.innerHTML = authHtml(to); body.querySelector('#au-email')?.focus(); }
+    const modeBtn = e.target.closest('[data-mode]');
+    if (modeBtn) { e.preventDefault(); body.innerHTML = authHtml(modeBtn.dataset.mode); body.querySelector('#au-email')?.focus(); }
   });
 }
 
@@ -156,12 +156,12 @@ function authHtml(mode) {
     <p class="muted small">${reg ? 'One account keeps your progress in sync across every device.' : 'Sign in to sync this device with your account.'}</p>
     <label class="field"><span>Email</span><input id="au-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false"></label>
     <label class="field"><span>Password</span><input id="au-pass" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" placeholder="${reg ? 'At least 8 characters' : ''}"></label>
-    ${reg ? '<label class="field"><span>Invite code (only if your server asks for one)</span><input id="au-code" autocapitalize="off" spellcheck="false"></label>' : ''}
+    ${reg ? '<label class="field"><span>Invite code <small>(if the server requires one)</small></span><input id="au-code" autocapitalize="off" spellcheck="false" placeholder="e.g. from whoever set up the server"></label>' : ''}
     <p class="auth-err" id="au-err" hidden></p>
     <button type="button" class="btn block lg" data-action="au-submit">${reg ? 'Create account' : 'Sign in'}</button>
     <p class="muted small center">${reg
-      ? 'Already have an account? <a href="#" data-mode="login">Sign in</a>'
-      : 'New here? <a href="#" data-mode="register">Create an account</a>'}</p>
+      ? 'Already have an account? <button type="button" class="linkbtn" data-mode="login">Sign in</button>'
+      : 'New here? <button type="button" class="linkbtn" data-mode="register">Create an account</button>'}</p>
   </form>`;
 }
 

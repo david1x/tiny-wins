@@ -393,6 +393,7 @@ small { font-size: .8rem; }
 .auth-err { color: #fff; background: var(--coral); padding: 10px 12px; border-radius: 12px; font-size: .88rem; margin: 0; }
 .signin-line { margin-top: 14px; }
 .signin-line a, .auth a { font-weight: 700; }
+.linkbtn { border: 0; background: none; color: var(--primary); font: inherit; font-weight: 700; cursor: pointer; padding: 0; text-decoration: underline; }
 
 /* ---------- Forms ---------- */
 .field { display: flex; flex-direction: column; gap: 6px; font-size: .85rem; color: var(--muted); font-weight: 600; }

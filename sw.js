@@ -1,5 +1,5 @@
 /* Tiny Wins service worker: offline cache + reminder scheduler. */
-const CACHE = 'tinywins-v5';
+const CACHE = 'tinywins-v6';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/app.css',
   './js/app.js', './js/actions.js', './js/data.js', './js/logic.js', './js/notify.js', './js/store.js', './js/sync.js', './js/ui.js', './js/util.js',
