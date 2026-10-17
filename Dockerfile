@@ -7,6 +7,6 @@ COPY . /usr/share/nginx/html
 RUN rm -f /usr/share/nginx/html/nginx.conf
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1
+  CMD wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1
 
 EXPOSE 80
