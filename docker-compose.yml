@@ -1,0 +1,9 @@
+services:
+  tiny-wins:
+    build: .
+    image: tiny-wins:latest
+    container_name: tiny-wins
+    restart: unless-stopped
+    ports:
+      # host:container — host port 8088 chosen to avoid the box's busy ports
+      - "8088:80"
