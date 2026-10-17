@@ -3,6 +3,7 @@ import { on, appCtx } from '../actions.js';
 import { SCIENCE, IDENTITIES, LIFE_TAGS } from '../data.js';
 import { computeXP, levelFor, computePlan, latestWeight, identitiesOf } from '../logic.js';
 import { openSheet, closeSheet, toast, confirmSheet } from '../ui.js';
+import { auth, login, register, signOut, fullSync } from '../sync.js';
 import { esc, today, isStandalone, fmtNum } from '../util.js';
 import {
   REMINDER_INFO, notifPermission, enableNotifications, testNotification, periodicStatus, registerPeriodic,
@@ -48,6 +49,8 @@ export function renderMe(s) {
     <ul class="becoming">${identitiesOf(p).map(t => `<li>${esc(t[0].toUpperCase() + t.slice(1))}</li>`).join('')}</ul>
     ${p.why ? `<p class="muted">“${esc(p.why)}”</p>` : ''}
   </section>
+
+  ${accountCard()}
 
   <h4 class="sec">🔔 Reminders</h4>
   <section class="card stack">
@@ -97,6 +100,102 @@ export function renderMe(s) {
   <p class="foot muted small">Tiny Wins · ~${fmtNum(plan.kcal)} kcal plan · Not medical advice. Check with your doctor before big diet changes.</p>
   `;
 }
+
+/* ---------- Sync / account ---------- */
+function relTime(ts) {
+  if (!ts) return 'not yet';
+  const s = Math.round((Date.now() - ts) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
+  return `${Math.floor(s / 86400)} d ago`;
+}
+
+function accountCard() {
+  const a = auth();
+  if (!a.signedIn) {
+    return `<h4 class="sec">☁️ Sync across devices</h4>
+    <section class="card stack">
+      <p class="small muted">Create an account to back up your progress and pick it up on your phone, tablet or laptop. Your data is yours — stored on your own server.</p>
+      <button class="btn block sky" data-action="auth-open">Sign in / Create account</button>
+    </section>`;
+  }
+  const label = {
+    syncing: '🔄 Syncing…', ok: '✅ All synced', error: `⚠️ ${a.error || 'Sync error'}`,
+    offline: `📴 ${a.error || 'Offline — saved locally'}`, idle: 'Signed in',
+  }[a.status] || 'Signed in';
+  return `<h4 class="sec">☁️ Sync</h4>
+    <section class="card stack">
+      <div class="rem-row">
+        <span class="rem-ic">👤</span>
+        <div class="grow"><b>${esc(a.email)}</b><small>${esc(label)} · last synced ${relTime(a.lastSync)}</small></div>
+      </div>
+      <div class="row gap">
+        <button class="btn ghost grow" data-action="sync-now" ${a.status === 'syncing' ? 'disabled' : ''}>Sync now</button>
+        <button class="btn ghost grow" data-action="sign-out">Sign out</button>
+      </div>
+    </section>`;
+}
+
+export function openAuthSheet(mode = 'login') {
+  const body = openSheet({
+    html: authHtml(mode),
+    onMount: el => el.querySelector('#au-email')?.focus(),
+  });
+  body.addEventListener('submit', e => e.preventDefault());
+  body.addEventListener('click', e => {
+    const to = e.target.closest('[data-mode]')?.dataset.mode;
+    if (to) { body.innerHTML = authHtml(to); body.querySelector('#au-email')?.focus(); }
+  });
+}
+
+function authHtml(mode) {
+  const reg = mode === 'register';
+  return `<form class="auth stack" novalidate>
+    <h2>${reg ? 'Create your account' : 'Welcome back'}</h2>
+    <p class="muted small">${reg ? 'One account keeps your progress in sync across every device.' : 'Sign in to sync this device with your account.'}</p>
+    <label class="field"><span>Email</span><input id="au-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false"></label>
+    <label class="field"><span>Password</span><input id="au-pass" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" placeholder="${reg ? 'At least 8 characters' : ''}"></label>
+    ${reg ? '<label class="field"><span>Invite code (only if your server asks for one)</span><input id="au-code" autocapitalize="off" spellcheck="false"></label>' : ''}
+    <p class="auth-err" id="au-err" hidden></p>
+    <button type="button" class="btn block lg" data-action="au-submit">${reg ? 'Create account' : 'Sign in'}</button>
+    <p class="muted small center">${reg
+      ? 'Already have an account? <a href="#" data-mode="login">Sign in</a>'
+      : 'New here? <a href="#" data-mode="register">Create an account</a>'}</p>
+  </form>`;
+}
+
+on('auth-open', () => openAuthSheet('login'));
+on('sync-now', () => fullSync());
+on('sign-out', async () => {
+  if (!(await confirmSheet('Sign out? Your data stays on this device and back on your account.', { ok: 'Sign out' }))) return;
+  await signOut();
+  toast('Signed out.');
+});
+
+on('au-submit', async btn => {
+  const sheet = btn.closest('.auth');
+  if (!sheet) return;
+  const err = sheet.querySelector('#au-err');
+  const email = sheet.querySelector('#au-email').value.trim();
+  const pass = sheet.querySelector('#au-pass').value;
+  const codeEl = sheet.querySelector('#au-code');
+  const reg = !!codeEl;
+  const showErr = m => { err.textContent = m; err.hidden = false; };
+  if (!email || !pass) return showErr('Enter your email and password.');
+  if (reg && pass.length < 8) return showErr('Password must be at least 8 characters.');
+  btn.disabled = true;
+  btn.textContent = reg ? 'Creating…' : 'Signing in…';
+  const r = reg ? await register(email, pass, codeEl.value.trim()) : await login(email, pass);
+  if (r.ok) {
+    closeSheet();
+    toast(reg ? '<b>Account created 🎉</b> Your progress is backing up.' : '<b>Signed in ✓</b> Syncing your data…', { kind: 'green' });
+  } else {
+    showErr(r.error);
+    btn.disabled = false;
+    btn.textContent = reg ? 'Create account' : 'Sign in';
+  }
+});
 
 /* ---------- Actions ---------- */
 on('notif-enable', async () => {

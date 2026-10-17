@@ -4,6 +4,27 @@ services:
     image: tiny-wins:latest
     container_name: tiny-wins
     restart: unless-stopped
+    depends_on:
+      - tiny-wins-api
     ports:
       # host:container — host port 8088 chosen to avoid the box's busy ports
       - "8088:80"
+
+  tiny-wins-api:
+    build: ./server
+    image: tiny-wins-api:latest
+    container_name: tiny-wins-api
+    restart: unless-stopped
+    environment:
+      # Set SIGNUP_CODE to require an invite code for new accounts (keeps the
+      # public URL from allowing open sign-ups). Leave empty for open signup.
+      SIGNUP_CODE: "${TINYWINS_SIGNUP_CODE:-}"
+    volumes:
+      - tinywins-data:/data
+    # Not published to the host: only reachable by the nginx container via the
+    # compose network, which proxies /api/ to it.
+    expose:
+      - "3000"
+
+volumes:
+  tinywins-data:

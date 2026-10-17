@@ -10,6 +10,7 @@ import { renderProgress } from './views/progress.js';
 import { renderMe } from './views/me.js';
 import { renderOnboarding } from './views/onboarding.js';
 import { openSOS } from './views/sos.js';
+import { initSync } from './sync.js';
 
 
 const VIEWS = { today: renderToday, journey: renderJourney, progress: renderProgress, me: renderMe };
@@ -121,3 +122,7 @@ if (s.onboarded) {
   syncReminders(s);
 }
 render();
+
+// Re-render when sync status changes (status pills, pulled data landing).
+window.addEventListener('tinywins-sync', render);
+initSync(onCommit);

@@ -27,6 +27,7 @@ const fresh = () => ({
   reminders: defaultReminders(),
   settings: { survival: false, dismissed: {} },
   lastReview: null,
+  updatedAt: 0, // bumped on every change; used for cross-device sync (newest wins)
 });
 
 function load() {
@@ -63,6 +64,7 @@ export const onCommit = fn => hooks.push(fn);
 
 export function commit(mutator) {
   mutator(state);
+  state.updatedAt = Date.now();
   save();
   hooks.forEach(fn => fn(state));
 }

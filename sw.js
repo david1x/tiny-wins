@@ -1,8 +1,8 @@
 /* Tiny Wins service worker: offline cache + reminder scheduler. */
-const CACHE = 'tinywins-v3';
+const CACHE = 'tinywins-v5';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/app.css',
-  './js/app.js', './js/actions.js', './js/data.js', './js/logic.js', './js/notify.js', './js/store.js', './js/ui.js', './js/util.js',
+  './js/app.js', './js/actions.js', './js/data.js', './js/logic.js', './js/notify.js', './js/store.js', './js/sync.js', './js/ui.js', './js/util.js',
   './js/views/today.js', './js/views/journey.js', './js/views/progress.js', './js/views/me.js',
   './js/views/onboarding.js', './js/views/sos.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-192.png', './icons/maskable-512.png',
@@ -10,7 +10,14 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  // cache:'reload' bypasses the HTTP cache so a new SW version always grabs fresh files.
+  e.waitUntil((async () => {
+    const c = await caches.open(CACHE);
+    await Promise.all(ASSETS.map(async u => {
+      try { const r = await fetch(u, { cache: 'reload' }); if (r.ok) await c.put(u, r); } catch { /* offline install */ }
+    }));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', e => {
@@ -24,6 +31,8 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+  // Sync API is always live, never cached.
+  if (new URL(req.url).pathname.startsWith('/api/')) return;
   const key = req.mode === 'navigate' ? './index.html' : req;
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);

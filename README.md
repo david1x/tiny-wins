@@ -3,7 +3,8 @@
 A mobile-first, installable web app for people who want to lose weight **without** a big life overhaul.
 Diet first, fitness second. One small stage at a time, built on psychology instead of willpower.
 
-No build step, no dependencies, no server. Plain HTML/CSS/JS. All data stays on the phone (localStorage).
+No build step, no dependencies. Plain HTML/CSS/JS. Works fully offline with data on the device
+(localStorage), and can **optionally** sync across devices through a tiny self-hosted account API.
 
 ## Example user it was designed around
 
@@ -82,6 +83,34 @@ Long-press the home-screen icon for **Craving SOS** and **Log weight** shortcuts
 - Rules: never more than one notification at a time, stale ones (>3 h late) are dropped, the check-in is skipped if you already finished your habits, and the weigh-in wins on its day.
 - For **exact-time** reminders while the app is closed you need Web Push from a small server (VAPID). `sw.js` already handles the `push` event (`{title, body, url}` payload), so only the sender is missing.
 
+## Sync across devices (accounts)
+
+By default everything is device-local. For the same person on several devices, there's an optional
+backend: a **dependency-free Node API** (`server/server.js`) with email + password accounts that stores
+one JSON state blob per user. The app and API share one origin — nginx proxies `/api/` to the API
+container — so there's no CORS and only one tunnel hostname.
+
+- **Sign in:** Me → *Sync across devices*, or "Sign in to restore" on the welcome screen. Passwords are
+  hashed (scrypt); sessions are random bearer tokens stored server-side.
+- **How sync works:** the whole state is one object with an `updatedAt` stamp. The client pushes after
+  changes (debounced) and pulls on load. On a conflict the two states are **merged** — logged days,
+  weigh-ins, cravings, workouts, badges and quests are unioned, and for a given day the better habit
+  mark wins — so using two devices never silently wipes progress.
+- **Your data stays yours:** it lives only in the `tinywins-data` Docker volume on your box.
+
+### Config (env on the `tiny-wins-api` service)
+
+| Var | Default | Purpose |
+|---|---|---|
+| `SIGNUP_CODE` | empty | If set, new accounts must supply this invite code. Set it so a public URL can't be used for open sign-ups. |
+| `ALLOW_ORIGIN` | empty | CORS allow-list, only needed if you serve the API on a *different* hostname than the app. Same-origin (the default nginx proxy) needs nothing. |
+
+Set an invite code for a deploy:
+
+```bash
+TINYWINS_SIGNUP_CODE=your-secret docker compose up -d --build
+```
+
 ## Files
 
 ```
@@ -89,11 +118,15 @@ index.html, manifest.webmanifest, sw.js
 css/app.css
 js/app.js        router, celebrations, install, SW registration
 js/store.js      state + localStorage
+js/sync.js       accounts + cross-device sync (push/pull + merge)
 js/logic.js      plan math, streaks, XP, stages, projection
 js/data.js       habits, stages, badges, messages, tips, workouts
 js/notify.js     notification permission + reminder sync (IndexedDB)
 js/ui.js         sheets, toasts, confetti, rings, timer, charts
 js/views/*.js    onboarding, today, sos, journey, progress, me
+server/server.js      sync API (dependency-free Node)
+server/Dockerfile     API container image
+Dockerfile, nginx.conf, docker-compose.yml   deployment (app + API)
 tools/make-icons.mjs   regenerates icons/ (node tools/make-icons.mjs)
 ```
 

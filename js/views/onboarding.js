@@ -3,6 +3,7 @@ import { on } from '../actions.js';
 import { computePlan } from '../logic.js';
 import { LIFE_TAGS, IDENTITIES } from '../data.js';
 import { REMINDER_INFO, enableNotifications, notifPermission } from '../notify.js';
+import { openAuthSheet } from './me.js';
 import { confetti, toast } from '../ui.js';
 import { esc, today, fmtNum, fmtKg, fmtDate, vibrate, joinList } from '../util.js';
 
@@ -49,7 +50,8 @@ function welcome() {
       <div class="feat"><span>🚫</span><div><b>No calorie counting</b><p>One-tap meal ratings. The habits create the deficit for you.</p></div></div>
     </div>
     <button class="btn block lg" data-action="ob-next">Let’s start (2 min)</button>
-    <button class="btn ghost block" data-action="ob-example">Try the example: 34y desk dad, 104.5 kg</button>`;
+    <button class="btn ghost block" data-action="ob-example">Try the example: 34y desk dad, 104.5 kg</button>
+    <p class="muted small center signin-line">Already have an account? <a href="#" data-action="ob-signin">Sign in to restore</a></p>`;
 }
 
 function about() {
@@ -209,6 +211,7 @@ on('ob-next', () => {
 });
 on('ob-back', () => { capture(); step = Math.max(0, step - 1); rerender(); });
 on('ob-example', () => { d = { ...d, ...EXAMPLE, reminders: defaultReminders() }; step = 1; rerender(); });
+on('ob-signin', () => openAuthSheet('login'));
 on('ob-sex', el => { capture(); d.sex = el.dataset.v; rerender(); });
 on('ob-act', el => { capture(); d.activity = el.dataset.v; rerender(); });
 on('ob-tag', el => {

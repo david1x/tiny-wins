@@ -23,7 +23,7 @@ const greet = () => {
   return h < 5 ? 'Late night' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
 };
 
-const tagged = (arr, tags) => arr.filter(x => !x.tag || tags.includes(x.tag));
+const tagged = (arr, tags = []) => arr.filter(x => !x.tag || tags.includes(x.tag));
 
 function habitRow(s, h, t, focus = false) {
   const weekly = h.type === 'weekly';
