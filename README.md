@@ -64,16 +64,30 @@ python -m http.server 5173
 
 Open http://localhost:5173 (localhost counts as secure, so the service worker and install work).
 
+## Deploy (Docker)
+
+The app ships as two containers behind nginx (which also serves the static PWA and proxies `/api/`
+to the sync API). See **[DEPLOY.md](DEPLOY.md)** for the full operations guide. Quick version:
+
+```bash
+docker compose up -d --build
+```
+
+App on `http://<host>:8088`. To build and push the images to a registry, then run from them:
+
+```bash
+docker compose build && docker compose push && docker compose up -d
+```
+
 ## Install on Android (Chrome)
 
-Chrome only installs PWAs served over **HTTPS**. Host the folder anywhere static, for example:
+Chrome only installs PWAs served over **HTTPS**, so put the container behind TLS — a Cloudflare
+Tunnel public hostname pointing at `localhost:8088`, a reverse proxy, or any static host for the
+front end. Then on the phone: open the URL in Chrome → **⋮ → Install app** (or tap the in-app
+"Install" banner). Long-press the home-screen icon for **Craving SOS** and **Log weight** shortcuts.
 
-- **Netlify Drop**: drag the folder onto https://app.netlify.com/drop
-- **GitHub Pages**: push the repo → Settings → Pages → deploy from branch
-- **Cloudflare Pages / Vercel**: point at the repo, no build command, output dir `/`
-
-Then on the phone: open the URL in Chrome → **⋮ → Install app** (or tap the in-app "Install" banner).
-Long-press the home-screen icon for **Craving SOS** and **Log weight** shortcuts.
+> Notifications and install need HTTPS; over plain HTTP (e.g. the LAN IP) the service worker does
+> not register, so those are disabled there but the rest of the app works.
 
 ## Notifications: how they work, honestly
 
@@ -127,6 +141,7 @@ js/views/*.js    onboarding, today, sos, journey, progress, me
 server/server.js      sync API (dependency-free Node)
 server/Dockerfile     API container image
 Dockerfile, nginx.conf, docker-compose.yml   deployment (app + API)
+DEPLOY.md             operations guide (deploy, registry, backups, invite code)
 tools/make-icons.mjs   regenerates icons/ (node tools/make-icons.mjs)
 ```
 
