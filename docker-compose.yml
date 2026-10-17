@@ -1,7 +1,7 @@
 services:
   tiny-wins:
     build: .
-    image: tiny-wins:latest
+    image: registry.amarsphere.com/tiny-wins:latest
     container_name: tiny-wins
     restart: unless-stopped
     depends_on:
@@ -12,7 +12,7 @@ services:
 
   tiny-wins-api:
     build: ./server
-    image: tiny-wins-api:latest
+    image: registry.amarsphere.com/tiny-wins-api:latest
     container_name: tiny-wins-api
     restart: unless-stopped
     environment:
